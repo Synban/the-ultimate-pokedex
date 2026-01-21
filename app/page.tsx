@@ -71,31 +71,37 @@ function getTypeColor(typeName: string): string {
   return colors[typeName.toLowerCase()] || '#68A090';
 }
 
-async function loadAllPokemon(): Promise<PokemonData[]> {
-  const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=10000');
-  const data: PokemonListResponse = await response.json();
-  
-  const pokemonData: PokemonData[] = [];
-  for (const pokemon of data.results) {
-    const pokemonResponse = await fetch(pokemon.url);
-    const pokemonInfo: PokemonData = await pokemonResponse.json();
-    pokemonData.push(pokemonInfo);
-  }
-  
-  return pokemonData.sort((a, b) => a.id - b.id);
-}
-
 export default function Home() {
   const [pokemonList, setPokemonList] = useState<PokemonData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Load all Pokemon
+  // Load Pokemon progressively
   useEffect(() => {
     async function loadAllData() {
-      const pokemon = await loadAllPokemon();
-      setPokemonList(pokemon);
-      setLoading(false);
+      const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=10000');
+      const data: PokemonListResponse = await response.json();
+      
+      // Sort URLs by Pokemon ID for better progressive display
+      const sortedUrls = data.results.sort((a, b) => {
+        const idA = getPokemonId(a.url);
+        const idB = getPokemonId(b.url);
+        return idA - idB;
+      });
+      
+      setLoading(false); // Allow interactivity as soon as we start loading
+      
+      // Load Pokemon progressively
+      for (const pokemon of sortedUrls) {
+        const pokemonResponse = await fetch(pokemon.url);
+        const pokemonInfo: PokemonData = await pokemonResponse.json();
+        
+        // Add each Pokemon as it loads, maintaining sorted order
+        setPokemonList((prev) => {
+          const updated = [...prev, pokemonInfo];
+          return updated.sort((a, b) => a.id - b.id);
+        });
+      }
     }
 
     loadAllData();
