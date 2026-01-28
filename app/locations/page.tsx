@@ -124,7 +124,7 @@ export default function LocationsListPage() {
                 {loading && <span className="text-sm text-gray-500 dark:text-gray-400">Loading…</span>}
               </div>
 
-              <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {filtered.map((loc) => (
                   <li key={loc.id} className="relative">
                     <Link

@@ -158,7 +158,7 @@ export default function PokemonListPage() {
                 )}
               </div>
 
-              <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {filtered.map((pokemon) => {
                   const types = [...pokemon.types].sort((a, b) => a.slot - b.slot);
                   const type1 = types[0]?.type.name;

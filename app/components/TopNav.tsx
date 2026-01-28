@@ -78,7 +78,7 @@ export function TopNav({ activeTab }: { activeTab?: TopNavTab }) {
       </div>
 
       <div className="mt-4 w-full max-w-4xl mx-auto">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {tabs.map((t) => {
             const isActive = t.key === active;
             return (
@@ -86,7 +86,7 @@ export function TopNav({ activeTab }: { activeTab?: TopNavTab }) {
                 key={t.key}
                 href={t.href}
                 className={[
-                  'flex-1 px-4 py-2 rounded-lg font-medium text-center transition-colors',
+                  'flex-1 px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm md:px-4 md:py-2 rounded-lg font-medium text-center transition-colors',
                   isActive
                     ? 'bg-blue-500 text-white'
                     : 'bg-zinc-200 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-zinc-300 dark:hover:bg-zinc-700',

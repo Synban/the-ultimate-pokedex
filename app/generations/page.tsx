@@ -64,7 +64,7 @@ export default function GenerationsPage() {
           ) : error ? (
             <div className="text-center text-gray-600 dark:text-gray-400">Error: {error}</div>
           ) : (
-            <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {gens.map((g) => (
                 <li key={g.name}>
                   <Link
