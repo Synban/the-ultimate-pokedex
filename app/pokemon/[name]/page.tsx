@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
+import { TopNav } from '../../components/TopNav';
 
 interface PokemonData {
   id: number;
@@ -9,6 +10,7 @@ interface PokemonData {
   height: number;
   weight: number;
   base_experience: number;
+  location_area_encounters: string;
   sprites: {
     front_default: string | null;
     back_default: string | null;
@@ -37,6 +39,50 @@ interface PokemonData {
     };
     is_hidden: boolean;
     slot: number;
+  }>;
+  moves: Array<{
+    move: {
+      name: string;
+      url: string;
+    };
+    version_group_details: Array<{
+      level_learned_at: number;
+      move_learn_method: {
+        name: string;
+        url: string;
+      };
+      version_group: {
+        name: string;
+        url: string;
+      };
+    }>;
+  }>;
+}
+
+interface LocationEncounter {
+  location_area: {
+    name: string;
+    url: string;
+  };
+  version_details: Array<{
+    version: {
+      name: string;
+      url: string;
+    };
+    max_chance: number;
+    encounter_details: Array<{
+      min_level: number;
+      max_level: number;
+      condition_values: Array<{
+        name: string;
+        url: string;
+      }>;
+      chance: number;
+      method: {
+        name: string;
+        url: string;
+      };
+    }>;
   }>;
 }
 
@@ -94,6 +140,7 @@ function getTypeColor(typeName: string): string {
 export default function PokemonDetail({ params }: { params: Promise<{ name: string }> }) {
   const { name } = use(params);
   const [pokemon, setPokemon] = useState<PokemonData | null>(null);
+  const [locationEncounters, setLocationEncounters] = useState<LocationEncounter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,6 +154,16 @@ export default function PokemonDetail({ params }: { params: Promise<{ name: stri
         }
         const data: PokemonData = await response.json();
         setPokemon(data);
+        
+        // Fetch location encounters
+        if (data.location_area_encounters) {
+          const encountersResponse = await fetch(data.location_area_encounters);
+          if (encountersResponse.ok) {
+            const encounters: LocationEncounter[] = await encountersResponse.json();
+            setLocationEncounters(encounters);
+          }
+        }
+        
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load Pokemon');
@@ -120,9 +177,12 @@ export default function PokemonDetail({ params }: { params: Promise<{ name: stri
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black p-4">
-        <div className="w-full max-w-4xl rounded-2xl bg-white dark:bg-zinc-900 shadow-lg dark:shadow-zinc-800/50 p-6 flex items-center justify-center">
-          <span className="text-gray-600 dark:text-gray-400">Loading Pokemon...</span>
+      <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black">
+        <TopNav activeTab="pokemon" />
+        <div className="flex flex-1 items-center justify-center p-4">
+          <div className="w-full max-w-4xl rounded-2xl bg-white dark:bg-zinc-900 shadow-lg dark:shadow-zinc-800/50 p-6 flex items-center justify-center">
+            <span className="text-gray-600 dark:text-gray-400">Loading Pokemon...</span>
+          </div>
         </div>
       </div>
     );
@@ -130,15 +190,18 @@ export default function PokemonDetail({ params }: { params: Promise<{ name: stri
 
   if (error || !pokemon) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-black p-4">
-        <div className="w-full max-w-4xl rounded-2xl bg-white dark:bg-zinc-900 shadow-lg dark:shadow-zinc-800/50 p-6 flex flex-col items-center justify-center gap-4">
-          <span className="text-gray-600 dark:text-gray-400">Error: {error || 'Pokemon not found'}</span>
-          <Link
-            href="/"
-            className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline"
-          >
-            Back to Pokemon List
-          </Link>
+      <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black">
+        <TopNav activeTab="pokemon" />
+        <div className="flex flex-1 items-center justify-center p-4">
+          <div className="w-full max-w-4xl rounded-2xl bg-white dark:bg-zinc-900 shadow-lg dark:shadow-zinc-800/50 p-6 flex flex-col items-center justify-center gap-4">
+            <span className="text-gray-600 dark:text-gray-400">Error: {error || 'Pokemon not found'}</span>
+            <Link
+              href="/pokemon"
+              className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline"
+            >
+              Back to Pokemon List
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -161,16 +224,9 @@ export default function PokemonDetail({ params }: { params: Promise<{ name: stri
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black p-4">
-      <div className="flex justify-center mb-4">
-        <Link
-          href="/"
-          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 underline"
-        >
-          ← Back to Pokemon List
-        </Link>
-      </div>
-      <div className="flex flex-1 items-center justify-center">
+    <div className="flex min-h-screen flex-col bg-zinc-50 dark:bg-black">
+      <TopNav activeTab="pokemon" />
+      <div className="flex flex-1 items-center justify-center p-4">
         <div
           className="w-full max-w-4xl rounded-2xl bg-white dark:bg-zinc-900 shadow-lg dark:shadow-zinc-800/50 p-6 flex flex-col gap-6"
           style={borderStyle}
@@ -288,6 +344,66 @@ export default function PokemonDetail({ params }: { params: Promise<{ name: stri
               </div>
             </div>
           </div>
+
+          <div className="mt-6 border-t border-zinc-200 dark:border-zinc-800 pt-6">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Moves</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-96 overflow-y-auto">
+                {pokemon.moves
+                  .sort((a, b) => a.move.name.localeCompare(b.move.name))
+                  .map((moveData) => {
+                    const moveName = moveData.move.name;
+                    const moveId = moveData.move.url.match(/\/move\/(\d+)\//)?.[1];
+                    const moveType = moveData.version_group_details[0]?.move_learn_method?.name || 'unknown';
+                    
+                    return (
+                      <Link
+                        key={moveData.move.name}
+                        href={`/moves/${moveName}`}
+                        className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors text-sm text-gray-800 dark:text-gray-200"
+                      >
+                        {formatPokemonName(moveName)}
+                      </Link>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+
+          {locationEncounters.length > 0 && (
+            <div className="mt-6 border-t border-zinc-200 dark:border-zinc-800 pt-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Locations</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                  {locationEncounters.map((encounter) => {
+                    const locationAreaName = encounter.location_area.name;
+                    // Extract location name by removing "-area" suffix if present
+                    const locationNameParts = locationAreaName.split('-');
+                    const locationName = locationNameParts.slice(0, -1).join('-');
+                    
+                    return (
+                      <div
+                        key={encounter.location_area.name}
+                        className="p-3 rounded-lg bg-zinc-100 dark:bg-zinc-800"
+                      >
+                        <Link
+                          href={`/locations/${locationName}`}
+                          className="text-gray-800 dark:text-gray-200 font-medium hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                        >
+                          {formatPokemonName(locationAreaName)}
+                        </Link>
+                        {encounter.version_details.length > 0 && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Available in: {encounter.version_details.map(v => formatPokemonName(v.version.name)).join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
